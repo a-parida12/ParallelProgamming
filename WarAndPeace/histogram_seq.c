@@ -3,10 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-void get_histogram(int nBlocks,
-		   						 block_t *blocks,
-		               int* histogram,
-		               int num_threads)
+void get_histogram(int nBlocks, block_t *blocks, int* histogram, int num_threads)
 {
 	char current_word[20] = "";
 	int c = 0;
