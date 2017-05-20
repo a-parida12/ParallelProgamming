@@ -12,15 +12,17 @@ struct pthread_args{
 
 	long thread_no;
 	block_t *blocks;
-	int* histogram;
+	int m_histogram[NNAMES];
+		
 };
-
 
 void* Checkword(void* ptr){
 
 	char current_word[20] = "";
 	int c = 0;
+
 	struct pthread_args *arg = (pthread_args *)ptr;
+
 	int start= arg->thread_no*nBlockThread;
 	int end=start+nBlockThread;
 
@@ -41,9 +43,11 @@ void* Checkword(void* ptr){
 			else {
 				current_word[c] = '\0';
 				for(int k = 0; k < NNAMES; k++)	{
+					if(current_word[0]==names[k][0]&&current_word[1]==names[k][1]){
 
-					if(!strcmp(current_word, names[k])){
-						arg->histogram[k]++;
+						if(!strcmp(current_word, names[k])){
+							arg->m_histogram[k]++;
+						}
 					}
 				}
 			c = 0;
@@ -57,7 +61,7 @@ void* Checkword(void* ptr){
 
 
 
-void get_histogram(int nBlocks, block_t *blocks, int* histogram, int num_threads)
+void get_histogram(int nBlocks, block_t *blocks, histogram_t histogram, int num_threads)
 {
 	total_thread=num_threads;
 	nBlockThread=nBlocks/(total_thread);
@@ -68,19 +72,26 @@ void get_histogram(int nBlocks, block_t *blocks, int* histogram, int num_threads
 	thread=(pthread_t*)malloc(num_threads * sizeof(*thread));
 	arg=(struct pthread_args*) malloc(num_threads*sizeof(*arg));
 
+
 	for (int i=0;i<num_threads; i++){
 		arg[i].thread_no=i;
 		arg[i].blocks=blocks;
-		arg[i].histogram=histogram;
 
+		for (int k = 0; k < NNAMES; k ++){
+        arg[i].m_histogram[k] = 0;
+		}
+	
 		pthread_create(thread+i,NULL,&Checkword,arg+i);
 	}
 
 	for (int i=0;i<num_threads; i++){
 		pthread_join(thread[i] , NULL);
+		
+		for(int k=0;k<NNAMES; k++){
+			histogram[k]+=arg[i].m_histogram[k];
+		}
 	}
 
 	free(thread);
 	free(arg);
-
 }
